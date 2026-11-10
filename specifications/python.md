@@ -2,13 +2,15 @@
 
 ## Scope
 
-These standards apply to new project Python code, especially the student-facing `pybadge.py` module and its supporting project code. They do not apply to the course samples and upstream design files kept in `hardware/`; those files are reference examples and should be preserved as such.
+These standards apply to new project Python code, especially the student-facing `pybadge.py` module and its supporting project code. They do not apply to the archived course samples in `old/python/` or upstream design files kept in `board/`; those files are reference examples and should be preserved as such.
 
 The software targets MicroPython on the ESP32-S3 eBadge. Keep the public interface approachable for learners who know Python functions but do not know electronics APIs.
 
+`pybadge.py` has three runtime modes with one shared student API: hardware mode on the physical badge, interactive simulator mode on a computer, and deterministic headless test mode for `pytest`. The simulator presents a terminal board view with clickable inputs; the test backend must not launch a UI or wait for input.
+
 ## Design principles
 
-- Give students clear, task-oriented functions such as `is_pressed(...)`, `set_led(...)`, and `display_text(...)`. Keep GPIO numbers, peripheral setup, and driver objects inside the library unless a feature explicitly exposes them.
+- Give students clear, task-oriented functions such as `is_pressed(...)`, `set_rgb_led(...)`, and `display_text(...)`. Keep GPIO numbers, peripheral setup, and driver objects inside the library unless a feature explicitly exposes them.
 - Use small functions with one clear purpose and predictable inputs, return values, and side effects.
 - Keep hardware initialization deliberate. Document which functions initialize hardware automatically and which require an explicit `initialize()` call.
 - Prefer consistent names and behavior across related helpers. Use lower-case `snake_case` for functions and variables, and uppercase names for constants.
