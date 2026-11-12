@@ -197,7 +197,33 @@ python resize_image.py byui-cse.png
 ```
 
 The utility is not implemented yet. Its planned output is a 24-bit BMP sized
-for the 320 × 240 screen; copy that BMP to the badge along with the example.
+for the 320 × 240 screen.
+
+### Copy project files to the badge
+
+The intended badge destinations are `/pybadge.py` for the shared API,
+`/main.py` for the program that should start on reset, and
+`/byui-cse_badge.bmp` for the prepared image used by the logo example. From the
+repository root, these `mpremote` commands copy those files (replace `<PORT>`
+with the badge's serial port):
+
+```sh
+python -m mpremote connect <PORT> fs cp pybadge.py :pybadge.py
+python -m mpremote connect <PORT> fs cp examples/01_button_led.py :main.py
+python -m mpremote connect <PORT> fs cp byui-cse_badge.bmp :byui-cse_badge.bmp
+```
+
+Copy the image only for programs that use it. To install the logo example
+instead of the button example, use its filename in the second command:
+
+```sh
+python -m mpremote connect <PORT> fs cp examples/04_display_logo.py :main.py
+```
+
+The hardware backend and its support-file requirements are not implemented
+yet, so these commands describe the intended destinations and are not a
+complete runnable deployment procedure. Finalize the file list and any
+additional copy commands with the hardware backend; see [TODO.md](TODO.md).
 
 ### Joystick values
 

@@ -12,9 +12,9 @@
 - [x] Evaluate the user-facing repository workflow: compare packaging `pybadge` for installation with pip against having users fork the repository and add programs under `examples/`. Document pros, cons, and a recommendation, considering setup effort, offline use, version updates, local edits, sharing, and maintenance.
 - [x] Create the top-level README with the repository map, usage instructions, current V4.1.1 board photos, and MicroPython installation steps adapted from `hardware/ebadge/README.md`.
 - [x] Add the BYU-I eBadge repository (`git@github.com:BYU-I-eBadge/e-badge.git`) as a Git submodule under `board/`.
-- [ ] Create documented command lists or scripts using `mpremote` to copy required libraries and user program files to the eBadge, including the expected destination filenames and paths.
+- [ ] Finalize the `mpremote` copy commands after the hardware backend and its support-file requirements are implemented. The README records the intended `/pybadge.py`, `/main.py`, and optional `/byui-cse_badge.bmp` destinations; confirm and complete the deployment procedure with the actual backend dependencies.
 - [x] Review the V4.1.1 hardware design and merge useful findings from `specifications/board_info_v4_1.md` into `specifications/hardware-v4.1.1.md`, including verified pin mappings, SD wiring, jumperable power sensing, wireless capability, and API candidates. Keep firmware-dependent details and ADC calibration clearly qualified.
-- [ ] Commit the staged archive move and related documentation changes so the archived source files are recorded in Git history.
+- [x] Commit the staged archive move and related documentation changes so the archived source files are recorded in Git history (recorded in the initial project commit, `55be908`).
 
 ## `pybadge.py` and runtime modes
 
