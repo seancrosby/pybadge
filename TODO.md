@@ -9,9 +9,10 @@
 
 ## Project structure and documentation
 
-- [x] Create the top-level README with the repository map, usage instructions, embedded `byui-ebadge-4_0.jpg`, and MicroPython installation steps adapted from `hardware/ebadge/README.md`.
+- [x] Evaluate the user-facing repository workflow: compare packaging `pybadge` for installation with pip against having users fork the repository and add programs under `examples/`. Document pros, cons, and a recommendation, considering setup effort, offline use, version updates, local edits, sharing, and maintenance.
+- [x] Create the top-level README with the repository map, usage instructions, current V4.1.1 board photos, and MicroPython installation steps adapted from `hardware/ebadge/README.md`.
 - [x] Add the BYU-I eBadge repository (`git@github.com:BYU-I-eBadge/e-badge.git`) as a Git submodule under `board/`.
-- [ ] Create documented command lists or scripts using `mpremote` to copy required libraries and student program files to the eBadge, including the expected destination filenames and paths.
+- [ ] Create documented command lists or scripts using `mpremote` to copy required libraries and user program files to the eBadge, including the expected destination filenames and paths.
 - [x] Review the V4.1.1 hardware design and merge useful findings from `specifications/board_info_v4_1.md` into `specifications/hardware-v4.1.1.md`, including verified pin mappings, SD wiring, jumperable power sensing, wireless capability, and API candidates. Keep firmware-dependent details and ADC calibration clearly qualified.
 - [ ] Commit the staged archive move and related documentation changes so the archived source files are recorded in Git history.
 
@@ -34,8 +35,8 @@
 
 ## Tests
 
-- [ ] Add `pytest` unit tests for `pybadge.py` using the headless test backend. Cover button state, LED state, tone requests, Wi-Fi results, display operations, and backend selection.
-- [ ] Add interactive hardware test programs for the `pybadge.py` public API. Include button checks, RGB and addressable LED checks, buzzer tone checks, display checks, and Wi-Fi scanning where supported.
+- [x] Add `pytest` unit tests for `pybadge.py` using the headless test backend. Cover button state, LED state, tone requests, Wi-Fi results, display operations, and backend selection.
+- [ ] Create a guided, interactive hardware test runner for the `pybadge.py` public API. Prompt the person testing the board to press named buttons, move the joystick, confirm visible RGB/strip LED and display output, confirm buzzer sound, and confirm Wi-Fi results where supported; record each confirmation as pass/fail and explain how to retry or skip a check. Include GPIO HIGH/LOW, PWM, ADC voltage, accelerometer, and battery/power sense checks when safe and available.
 - [ ] Add interactive hardware test programs for the hardware-specific interface itself, independently of `pybadge.py`, covering the same physical components where practical.
 - [ ] Include accelerometer and battery-voltage checks in headless and interactive hardware validation. These are not required in the focused terminal simulator.
 - [ ] Document how to run automated tests on a computer and how to run/interpret the interactive checks on the physical badge.

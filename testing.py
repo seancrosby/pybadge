@@ -16,7 +16,9 @@ def session(backend=None):
 
     Example::
 
-        with pybadge.testing.session() as board:
+        from testing import session
+
+        with session() as board:
             board.press_button(pybadge.BUTTON_A)
             assert pybadge.is_pressed(pybadge.BUTTON_A)
     """

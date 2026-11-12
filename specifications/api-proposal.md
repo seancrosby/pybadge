@@ -25,7 +25,7 @@ LEDs, and buzzer, not a complete electrical or wireless model. Its blue board
 artwork permanently displays the BYU-Idaho logo; program output appears in the
 separate simulated screen area.
 
-## Candidate student functions
+## Candidate user functions
 
 | Function | Proposed behavior |
 | --- | --- |
@@ -96,7 +96,7 @@ clear error. `read_pin()`, `is_high()`, and `is_low()` are digital reads and
 remain available on verified digital-input GPIOs whether or not they support
 ADC. Document the safe voltage range for each analog input. GPIO uses 3.3 V
 logic; the software cannot protect a pin from an over-voltage connection. PWM
-should be limited to verified output pins and use a student-friendly duty
+should be limited to verified output pins and use an approachable duty
 percentage from 0 to 100. The final supported pin list needs V4.1.1 validation.
 
 **Deferred future work:** Bluetooth Low Energy (BLE) and SD-card support are
@@ -167,5 +167,5 @@ helper names are open for review.
     API. Defer BLE and SD-card support to future work.
 
 Please revise this proposal before the implementation task begins. The API
-should favor clear, predictable behavior for students over one-to-one exposure
+should favor clear, predictable behavior for users over one-to-one exposure
 of low-level driver calls.

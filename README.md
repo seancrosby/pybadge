@@ -1,7 +1,7 @@
 # pybadge
 
 `pybadge` is a beginner-friendly Python interface for BYU-Idaho's ESP32-S3
-eBadge. The goal is for students to write ordinary Python programs that use
+eBadge. The goal is for any user to write ordinary Python programs that use
 buttons, LEDs, the screen, sound, sensors, and Wi-Fi without dealing with GPIO
 numbers or low-level electronics APIs.
 
@@ -9,10 +9,28 @@ The intended `pybadge.py` interface will support three modes: the physical
 eBadge, an interactive terminal simulator, and a headless test backend. The
 public API has been reviewed; implementation details and remaining tasks are
 tracked in [TODO.md](TODO.md) and the [specifications](specifications/). The
-programs in [`examples/`](examples/) show the intended student experience and
+programs in [`examples/`](examples/) show the intended user experience and
 will become runnable when the API is implemented. The simulator's blue board
 artwork will carry the BYU-Idaho logo permanently, separate from the simulated
 screen, whose contents are controlled by the running program.
+
+## Classroom workflow
+
+Use this repository as the maintained source for the library, examples, and
+setup instructions. Keep personal programs under `examples/` or a clearly
+named work folder; normal use should not require editing library internals.
+Users can fork or clone the repository when GitHub access is available. For
+restricted or offline environments, distribute a ZIP or prepared checkout.
+After the initial copy, programs can be developed without network access.
+
+Record a known repository revision when reproducibility matters. Keep personal
+programs and generated files separate from maintained library changes. The API
+is still under implementation, so this project does not currently require a
+pip package. Once the API is stable, a versioned host-side package may be an
+additional simulator installation option; badge deployment will still require
+copying MicroPython-compatible files to the device. See the
+[user workflow recommendation](specifications/user-workflow.md) for the
+distribution tradeoffs.
 
 The first API includes accelerometer and battery-voltage helpers. Battery
 readings are voltages, not estimated charge percentages. BLE and SD-card
@@ -32,15 +50,11 @@ and components; the back includes a printed quick reference for GPIOs and buses.
 
 ![Back of the BYU-Idaho eBadge V4.1.1](byui-ebadge-back-4_1_1.jpg)
 
-The earlier V4.0 photo is retained as a historical reference:
-
-![BYU-Idaho eBadge V4.0 board](byui-ebadge-4_0.jpg)
-
 ## Repository structure
 
 | Path | Purpose |
 | --- | --- |
-| `pybadge.py` | Planned student-facing API shared by all runtime modes. |
+| `pybadge.py` | Planned user-facing API shared by all runtime modes. |
 | `backends/` | Planned hardware, simulator, and test implementations. |
 | `board/` | Planned e-badge Git submodule and hardware design source. |
 | `specifications/` | Python standards and the current V4.1.1 board specification. |
@@ -150,6 +164,19 @@ At the `>>>` prompt, try `print("Hello from the eBadge!")`. Press **Ctrl-]** to
 leave the REPL. If port auto-detection works, `python -m mpremote` can connect
 without an explicit port.
 
+## Run the headless tests
+
+The pytest suite uses the deterministic test backend. It does not launch the
+terminal simulator or require an eBadge:
+
+```sh
+python -m pip install pytest
+python -m pytest
+```
+
+The tests are collected only from `tests/`; archived course examples under
+`old/` are reference material, not pytest test modules.
+
 ## Run the examples
 
 The four programs in [`examples/`](examples/) demonstrate the intended API:
@@ -192,6 +219,7 @@ use their own board libraries and are retained as references.
 
 ## Specifications and contribution notes
 
+- [User repository workflow recommendation](specifications/user-workflow.md)
 - [Python software specification](specifications/python.md)
 - [eBadge V4.1.1 hardware specification](specifications/hardware-v4.1.1.md)
 - [Project instructions](AGENTS.md)

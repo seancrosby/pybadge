@@ -4,7 +4,7 @@
 
 This document is the merged hardware reference for the `pybadge.py` interface and targets board revision V4.1.1. It combines the archived MicroPython samples, the new [board_info_v4_1.md](board_info_v4_1.md) notes, and the upstream V4.1.1 CAD/BOM/netlist under `board/hardware v4.1.1/badge-esp32-s3/` (the upstream directory name contains spaces). Arduino setup instructions remain in `board_info_v4_1.md`; this file focuses on board facts and implications for the beginner-facing Python API.
 
-The V4.1.1 [front](../byui-ebadge-front-4_1_1.jpg) and [back](../byui-ebadge-back-4_1_1.jpg) photos show the physical board and its silkscreen pin reference. Use these for revision-specific visual details; the older [V4.0 photo](../byui-ebadge-4_0.jpg) remains a legacy reference.
+The V4.1.1 [front](../byui-ebadge-front-4_1_1.jpg) and [back](../byui-ebadge-back-4_1_1.jpg) photos show the physical board and its silkscreen pin reference. Use these for revision-specific visual details.
 
 ## Board overview
 
@@ -165,7 +165,7 @@ the first `pybadge.py` API scope:
 - **Animation/audio:** archived examples include a BYU-I demo with a changing
   LED pattern, plus a buzzer song. These support the reviewed loop-and-pause
   approach for animation; a later `play_song()` helper could be considered if
-  students need nonblocking notes or note sequences.
+  users need nonblocking notes or note sequences.
 - **Serial communication:** the design exposes UART0 through the USB-UART
   bridge and UART1 on GPIO35/36. A small serial helper may be useful for
   accessory projects, but it is lower priority than core board features.
@@ -191,4 +191,3 @@ the first `pybadge.py` API scope:
 - `old/python/ebadge.py`: accelerometer, battery ADC, Wi-Fi/BLE, exposed GPIO, and generic SD helper behavior.
 - `old/python/demo_wireless_scan.py`: demonstrated Wi-Fi scan and conditional BLE scan behavior.
 - `old/code_for_board_v4_1/code_for_board_v4_1/`: archived V4.1 MicroPython examples. These are reference examples and are intentionally exempt from the repository's Python style requirements.
-- `byui-ebadge-4_0.jpg`: visual guide to physical control and header placement; V4.0-named image, not authoritative for V4.1.1 differences.

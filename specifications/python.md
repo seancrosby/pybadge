@@ -2,15 +2,15 @@
 
 ## Scope
 
-These standards apply to new project Python code, especially the student-facing `pybadge.py` module and its supporting project code. They do not apply to the archived course samples in `old/python/` or upstream design files kept in `board/`; those files are reference examples and should be preserved as such.
+These standards apply to new project Python code, especially the user-facing `pybadge.py` module and its supporting project code. They do not apply to archived samples in `old/python/` or upstream design files kept in `board/`; those files are reference examples and should be preserved as such.
 
 The software targets MicroPython on the ESP32-S3 eBadge. Keep the public interface approachable for learners who know Python functions but do not know electronics APIs.
 
-`pybadge.py` has three runtime modes with one shared student API: hardware mode on the physical badge, interactive simulator mode on a computer, and deterministic headless test mode for `pytest`. The simulator presents a terminal board view with clickable inputs; the test backend must not launch a UI or wait for input.
+`pybadge.py` has three runtime modes with one shared API: hardware mode on the physical badge, interactive simulator mode on a computer, and deterministic headless test mode for `pytest`. The simulator presents a terminal board view with clickable inputs; the test backend must not launch a UI or wait for input.
 
 ## Design principles
 
-- Give students clear, task-oriented functions such as `is_pressed(...)`, `set_rgb_led(...)`, and `display_text(...)`. Keep GPIO numbers, peripheral setup, and driver objects inside the library unless a feature explicitly exposes them.
+- Give users clear, task-oriented functions such as `is_pressed(...)`, `set_rgb_led(...)`, and `display_text(...)`. Keep GPIO numbers, peripheral setup, and driver objects inside the library unless a feature explicitly exposes them.
 - Use small functions with one clear purpose and predictable inputs, return values, and side effects.
 - Keep hardware initialization deliberate. Document which functions initialize hardware automatically and which require an explicit `initialize()` call.
 - Prefer consistent names and behavior across related helpers. Use lower-case `snake_case` for functions and variables, and uppercase names for constants.
@@ -53,3 +53,9 @@ The software targets MicroPython on the ESP32-S3 eBadge. Keep the public interfa
 - Prefer examples that introduce one concept at a time and use `pybadge.py` instead of low-level `machine` calls.
 - When changing an API, update its docstring and the project README or relevant specification so they describe the same behavior.
 - Review new project code for MicroPython compatibility, clear failure behavior, and unintended interaction with board peripherals.
+
+## User program organization
+
+- Keep the shared library and backend implementation separate from user programs. Place adaptable programs in `examples/` or a clearly named work directory; normal use should not require changing library internals.
+- Examples should be short, runnable demonstrations of the public API and should state any required files or setup. Keep them suitable for copying to the badge as individual MicroPython programs.
+- The repository source is the initial distribution format. Users may fork/clone it or use a prepared ZIP/checkout; instructions should name a revision when reproducibility matters. Do not add packaging-specific complexity to the MicroPython library solely to support distribution.
