@@ -174,8 +174,9 @@ python -m pip install pytest
 python -m pytest
 ```
 
-The tests are collected only from `tests/`; archived course examples under
-`old/` are reference material, not pytest test modules.
+GitHub Actions runs this suite automatically on every push and pull request.
+The tests are collected only from `tests/`; archived examples under `old/` are
+reference material, not pytest test modules.
 
 ## Run the examples
 
