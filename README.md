@@ -58,6 +58,7 @@ and components; the back includes a printed quick reference for GPIOs and buses.
 | --- | --- |
 | `pybadge.py` | User-facing API shared by all runtime modes. |
 | `backends/` | Hardware, simulator, and headless test implementations. The maintained `backends/hardware/` package contains the on-device drivers. |
+| `deploy.py` | Host-side helper that uses `mpremote` to copy the library, a program, and optional assets to the badge. |
 | `board/` | eBadge Git submodule and hardware design source (initialize with the submodule command below). |
 | `specifications/` | Python standards and the current V4.1.1 board specification. |
 | `examples/` | Small programs demonstrating the public API. |
@@ -242,41 +243,44 @@ This creates `byui-cse_badge.bmp`, an uncompressed 24-bit BMP resized to fit
 the 320 × 240 display while preserving the source aspect ratio. Small source
 images are not enlarged.
 
-### Copy project files to the badge
+### Deploy programs to the badge
 
-Hardware mode uses the maintained backend and driver modules in this
-repository. It does not require files from `old/python/`. From the repository
-root, create the backend directories and copy the required modules. Replace
-`<PORT>` with the badge's serial port:
-
-```sh
-python -m mpremote connect <PORT> fs cp pybadge.py :pybadge.py
-# Create each directory once; skip a mkdir command if that directory exists.
-python -m mpremote connect <PORT> fs mkdir :backends
-python -m mpremote connect <PORT> fs cp backends/__init__.py :backends/__init__.py
-python -m mpremote connect <PORT> fs cp backends/hardware_backend.py :backends/hardware_backend.py
-python -m mpremote connect <PORT> fs mkdir :backends/hardware
-python -m mpremote connect <PORT> fs cp backends/hardware/__init__.py :backends/hardware/__init__.py
-python -m mpremote connect <PORT> fs cp backends/hardware/st7789py.py :backends/hardware/st7789py.py
-python -m mpremote connect <PORT> fs cp backends/hardware/vga1_8x16.py :backends/hardware/vga1_8x16.py
-python -m mpremote connect <PORT> fs cp examples/01_button_led.py :main.py
-```
-
-To install the logo example, copy it to `/main.py` and copy its prepared image
-to `/byui-cse_badge.bmp`:
+`mpremote` is a Python package with a command-line interface. Install it with
+the host tools above, then use `deploy.py` to upload programs and files. On
+first deployment, include `--install-library` to copy `pybadge.py` and the
+backend directory. Replace `<PORT>` with the badge's serial port:
 
 ```sh
-python -m mpremote connect <PORT> fs cp examples/04_display_logo.py :main.py
-python -m mpremote connect <PORT> fs cp byui-cse_badge.bmp :byui-cse_badge.bmp
+python deploy.py --port <PORT> --install-library examples/01_button_led.py
 ```
 
-The display-shapes example needs no extra asset:
+The script copies the selected program to `/main.py`. After the library is
+installed, later programs do not need the library flag:
 
 ```sh
-python -m mpremote connect <PORT> fs cp examples/05_display_shapes.py :main.py
+python deploy.py --port <PORT> examples/05_display_shapes.py
 ```
 
-`HardwareBackend` now owns the eBadge pin setup and peripheral operations.
+To deploy the logo example and its prepared image in one command:
+
+```sh
+python deploy.py --port <PORT> --install-library --asset byui-cse_badge.bmp examples/04_display_logo.py
+```
+
+Use `--asset FILE` to copy another resource to the badge's root directory;
+repeat the option to copy more than one asset. The same flag can upload a
+manual test runner without replacing `/main.py`:
+
+```sh
+python deploy.py --port <PORT> --asset hardware_tests/run_pybadge_checks.py
+```
+
+The deploy helper starts `mpremote` through the same Python interpreter used
+to run the script. The package must be installed in that environment. The
+helper uses the maintained backend and driver modules; files from
+`old/python/` are not required on the badge.
+
+`HardwareBackend` owns the eBadge pin setup and peripheral operations.
 The `backends/hardware/` package supplies its ST7789 display driver and font;
 `old/python/` remains reference material and is not needed on the badge. The
 addressable LED strip also uses MicroPython's `neopixel` module when that
@@ -291,13 +295,13 @@ them.
 
 ## Run guided checks on the physical badge
 
-Use a physical V4.1.1 badge with MicroPython installed and complete the
-hardware file-copy steps above first. From the repository root, note the
-software revision and copy the guided runner to the badge:
+Use a physical V4.1.1 badge with MicroPython installed and deploy the hardware
+library first. From the repository root, note the software revision, upload
+the guided runner as an asset, and open the interactive REPL:
 
 ```sh
 git rev-parse --short HEAD
-python -m mpremote connect <PORT> fs cp hardware_tests/run_pybadge_checks.py :run_pybadge_checks.py
+python deploy.py --port <PORT> --asset hardware_tests/run_pybadge_checks.py
 python -m mpremote connect <PORT> repl
 ```
 
@@ -344,10 +348,10 @@ The test runner does not upload its summary elsewhere. Save the results with
 the project issue or TODO entry used to track the physical validation, and
 investigate failures before treating the corresponding feature as validated.
 
-To check `HardwareBackend` directly, copy and import its runner:
+To check `HardwareBackend` directly, upload and import its runner:
 
 ```sh
-python -m mpremote connect <PORT> fs cp hardware_tests/run_hardware_backend_checks.py :run_hardware_backend_checks.py
+python deploy.py --port <PORT> --asset hardware_tests/run_hardware_backend_checks.py
 python -m mpremote connect <PORT> repl
 ```
 
