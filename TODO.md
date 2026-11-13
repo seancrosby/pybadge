@@ -20,7 +20,7 @@
 
 - [x] Review the public API with the project owner; agreed decisions are recorded in [`specifications/api-proposal.md`](specifications/api-proposal.md).
 - [ ] Implement one stable, beginner-friendly `pybadge.py` API backed by three modes:
-  - [x] Hardware mode: delegate supported operations to the board-specific `ebadge.py` library on the eBadge.
+  - [x] Hardware mode: delegate supported operations to maintained, repository-owned MicroPython drivers on the eBadge.
   - [x] Simulator mode: run on a regular computer with a terminal board visual, simple display, and clickable buttons using Textual.
     - [x] Put the BYU-Idaho logo in the blue board artwork as permanent silkscreen-style decoration, separate from the program-controlled simulated screen. Provide a terminal-compatible fallback when image rendering is unavailable.
     - [x] Focus the simulator on buttons, joystick, screen, LEDs, and buzzer; clearly document unsupported simulation such as Wi-Fi, ADC voltage readings, and full electrical behavior.
@@ -40,9 +40,10 @@
 
 - [x] Add `pytest` unit tests for `pybadge.py` using the headless test backend. Cover button state, LED state, tone requests, Wi-Fi results, display operations, and backend selection.
 - [x] Create a guided, interactive hardware test runner for the `pybadge.py` public API. It prompts for button, joystick, LED, display, buzzer, Wi-Fi, GPIO HIGH/LOW, PWM, ADC, accelerometer, and battery/power checks; records pass/fail/skip and supports retry.
-- [x] Add an interactive hardware test program for the hardware-specific `ebadge.py` library, independently of `pybadge.py`, covering the same physical components where practical.
+- [x] Add an interactive hardware test program for `HardwareBackend`, independently of `pybadge.py`, covering the same physical components where practical.
 - [x] Include accelerometer and battery-voltage checks in headless and interactive hardware validation. These are not required in the focused terminal simulator.
 - [x] Document how to run automated tests on a computer and how to run/interpret the interactive checks on the physical badge.
+- [ ] Have a human upload and run `hardware_tests/run_pybadge_checks.py` on a physical V4.1.1 badge; record the results and investigate any failures.
 
 ## Example programs
 

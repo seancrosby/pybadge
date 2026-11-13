@@ -57,7 +57,7 @@ and components; the back includes a printed quick reference for GPIOs and buses.
 | Path | Purpose |
 | --- | --- |
 | `pybadge.py` | User-facing API shared by all runtime modes. |
-| `backends/` | Hardware, simulator, and headless test implementations. |
+| `backends/` | Hardware, simulator, and headless test implementations. The maintained `backends/hardware/` package contains the on-device drivers. |
 | `board/` | eBadge Git submodule and hardware design source (initialize with the submodule command below). |
 | `specifications/` | Python standards and the current V4.1.1 board specification. |
 | `examples/` | Small programs demonstrating the public API. |
@@ -244,21 +244,21 @@ images are not enlarged.
 
 ### Copy project files to the badge
 
-Hardware mode uses the backend package plus the existing `ebadge.py` library,
-board driver, display driver, and font. From the repository root, create the
-backend directory and copy the required modules. Replace `<PORT>` with the
-badge's serial port:
+Hardware mode uses the maintained backend and driver modules in this
+repository. It does not require files from `old/python/`. From the repository
+root, create the backend directories and copy the required modules. Replace
+`<PORT>` with the badge's serial port:
 
 ```sh
 python -m mpremote connect <PORT> fs cp pybadge.py :pybadge.py
-# Run this once on a fresh device; skip if :backends already exists.
+# Create each directory once; skip a mkdir command if that directory exists.
 python -m mpremote connect <PORT> fs mkdir :backends
 python -m mpremote connect <PORT> fs cp backends/__init__.py :backends/__init__.py
 python -m mpremote connect <PORT> fs cp backends/hardware_backend.py :backends/hardware_backend.py
-python -m mpremote connect <PORT> fs cp old/python/ebadge.py :ebadge.py
-python -m mpremote connect <PORT> fs cp old/python/board_v4.py :board_v4.py
-python -m mpremote connect <PORT> fs cp old/python/st7789py.py :st7789py.py
-python -m mpremote connect <PORT> fs cp old/python/vga1_8x16.py :vga1_8x16.py
+python -m mpremote connect <PORT> fs mkdir :backends/hardware
+python -m mpremote connect <PORT> fs cp backends/hardware/__init__.py :backends/hardware/__init__.py
+python -m mpremote connect <PORT> fs cp backends/hardware/st7789py.py :backends/hardware/st7789py.py
+python -m mpremote connect <PORT> fs cp backends/hardware/vga1_8x16.py :backends/hardware/vga1_8x16.py
 python -m mpremote connect <PORT> fs cp examples/01_button_led.py :main.py
 ```
 
@@ -276,7 +276,11 @@ The display-shapes example needs no extra asset:
 python -m mpremote connect <PORT> fs cp examples/05_display_shapes.py :main.py
 ```
 
-The backend delegates board operations to the archived `ebadge.py` library.
+`HardwareBackend` now owns the eBadge pin setup and peripheral operations.
+The `backends/hardware/` package supplies its ST7789 display driver and font;
+`old/python/` remains reference material and is not needed on the badge. The
+addressable LED strip also uses MicroPython's `neopixel` module when that
+feature is called.
 The joystick direction mapping remains unavailable pending physical
 validation. Battery-voltage readings use the nominal ×16 divider ratio and
 still need calibration on the physical board. Confirm the VMain-to-IO12 jumper
@@ -287,41 +291,68 @@ them.
 
 ## Run guided checks on the physical badge
 
-After copying the hardware backend files above, copy the runner to the badge
-and open its interactive REPL. The checks prompt
-for keyboard input, so run them from the REPL instead of `mpremote run`.
+Use a physical V4.1.1 badge with MicroPython installed and complete the
+hardware file-copy steps above first. From the repository root, note the
+software revision and copy the guided runner to the badge:
 
 ```sh
+git rev-parse --short HEAD
 python -m mpremote connect <PORT> fs cp hardware_tests/run_pybadge_checks.py :run_pybadge_checks.py
 python -m mpremote connect <PORT> repl
 ```
 
-At the MicroPython `>>>` prompt, enter:
+The runner uses keyboard prompts, so launch it from the interactive REPL, not
+with `mpremote run`. At the MicroPython `>>>` prompt, enter:
 
 ```python
 import run_pybadge_checks
 run_pybadge_checks.main()
 ```
 
-The runner asks you to press and release each button, confirm LED/display/tone
+Follow the prompts to press and release each button, confirm LED/display/tone
 output, inspect Wi-Fi results, and record each check as pass, fail, retry, or
-skip. Optional GPIO checks require a wire between GPIO13 and GPIO14; connect no
+skip. The runner prints a final summary. The joystick check is expected to
+skip until its hardware direction and center calibration is implemented.
+
+Optional GPIO checks require a wire between GPIO13 and GPIO14; connect no
 power source for that loopback. The PWM check needs an oscilloscope or an LED
 with a current-limiting resistor. The ADC check needs a known source within the
 documented measurement range and a common ground. Skip any check when its safe
 test setup is unavailable. The battery reading is a nominal estimate; compare
-it with a meter and record the result while the VMain-to-IO12 jumper is fitted.
+it with a meter only when the VMain-to-IO12 jumper is fitted and Wi-Fi is
+inactive.
 
-To check the hardware-specific library independently of `pybadge.py`, copy
-and import the second runner:
+Record the date, badge revision, MicroPython firmware version, and software
+revision along with the summary. Keep failed checks and skipped checks with
+their reasons; for ADC and battery checks, include the source or meter voltage
+and the value reported by the badge. Use this format when recording a run:
+
+```text
+Date:
+Badge revision: V4.1.1
+MicroPython version:
+Software revision:
+PASS:
+FAIL:
+SKIP (with reason):
+ADC source/meter voltage and badge reading:
+Battery meter voltage and badge estimate:
+Notes:
+```
+
+The test runner does not upload its summary elsewhere. Save the results with
+the project issue or TODO entry used to track the physical validation, and
+investigate failures before treating the corresponding feature as validated.
+
+To check `HardwareBackend` directly, copy and import its runner:
 
 ```sh
-python -m mpremote connect <PORT> fs cp hardware_tests/run_ebadge_checks.py :run_ebadge_checks.py
+python -m mpremote connect <PORT> fs cp hardware_tests/run_hardware_backend_checks.py :run_hardware_backend_checks.py
 python -m mpremote connect <PORT> repl
 ```
 
-At the MicroPython prompt, enter `import run_ebadge_checks` followed by
-`run_ebadge_checks.main()`.
+At the MicroPython prompt, enter `import run_hardware_backend_checks` followed
+by `run_hardware_backend_checks.main()`.
 
 Both scripts print a pass/fail/skip summary. They do not change jumper bridges
 or infer their positions.
