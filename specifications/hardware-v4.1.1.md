@@ -57,11 +57,24 @@ description/part-number mismatch: its value field says `ESP32-S2-MINI-1`, but
 its manufacturer part number is `ESP32-S3-MINI-1-N4R2`, consistent with the
 design folder and code samples. Use the actual GPIO signal names in software.
 
+Espressif maps GPIO13–GPIO18 to ADC2 channels 2–7, respectively. The
+hardware-mode `read_voltage()` helper uses MicroPython's `machine.ADC.read_uv()`
+with 11 dB attenuation. The ESP32-S3 ADC2 pins cannot be read while Wi-Fi is
+active, so the helper raises a clear error in that state. MicroPython's
+documented linear range for this setting is approximately 0.15–2.45 V at the
+GPIO; readings outside that range are not promised to be accurate. Keep all
+external signals within the board's 0–3.3 V logic range. This assignment is
+supported by the [Espressif ESP32-S3 ADC channel table](https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32s3/schematic-checklist.html#adc-functions)
+and the [MicroPython v1.29 ESP32 ADC reference](https://docs.micropython.org/en/v1.29.0/esp32/quickref.html#adc-analog-to-digital-conversion).
+
 The board uses jumper links to route device signals to GPIO header pins. The
 software helpers assume the standard links described by the board samples and
 the board notes. Removing or moving a link can disconnect a peripheral or
 change which GPIO it uses; software cannot detect that physical change. A
-custom wiring profile will be needed when users change links.
+custom wiring profile is not currently supported. For a nonstandard link
+arrangement, use the external GPIO helpers with the signal's actual GPIO number
+and do not use a built-in peripheral helper whose expected route was changed.
+Restore the standard link positions before using that helper again.
 
 **GPIO 12 and battery sense:** The V4 MicroPython driver assigns GPIO12 as TFT MISO, while the V4.1.1 display schematic does not require a MISO connection for normal writes. The V4.1.1 production netlist shows GPIO12 at the GPIO header separately from `BATTERYVOLTAGE`; the battery sense node is a distinct jumperable signal. `board_info_v4_1.md` describes linking `VMain` to `IO12`. Treat this as a selectable jumper route, not a permanently shared net, and do not use display reads and battery measurement simultaneously if both are routed to GPIO12.
 
@@ -121,7 +134,7 @@ schematic and production netlist for electrical connectivity and jumper routing.
 | Battery / power monitor | V4.1.1 has a jumperable `BATTERYVOLTAGE`/`VMain` sense net across a 150 kΩ / 10 kΩ divider from `PWR_RAW`. The archived MicroPython sample estimates voltage but uses an assumed ADC scale; calibrate before promising accurate volts. This is selected rail voltage, not charge percentage. |
 | Wi-Fi | ESP32-S3 MicroPython `network.WLAN` station interface is used for scanning and connecting. Firmware and regional radio rules may affect operation. |
 | Bluetooth LE | Archived MicroPython sample attempts `bluetooth.BLE` and `gap_scan`; availability and exact API support depend on the installed firmware build. |
-| External GPIO | GPIO 13–18 are accepted by the sample helper for exposed external connections; use 3.3 V logic and confirm header wiring before connecting hardware. Archived servo demo uses GPIO13 at 50 Hz. |
+| External GPIO | GPIO13–GPIO18 are digital GPIOs and ADC2 channels on the ESP32-S3; the V4.1.1 netlist routes them to exposed J9 contacts. Use 3.3 V logic. ADC readings require Wi-Fi to be inactive and are only specified in the ADC's documented linear range. Archived servo demo uses GPIO13 at 50 Hz. |
 | SD storage | Hardware wiring is confirmed at GPIO37–40. The archived examples do not establish a V4.1.1 MicroPython SD mount workflow, so it remains outside the current API until tested on the target firmware. |
 
 ### Additional V4.1.1 capabilities and API candidates
@@ -136,7 +149,8 @@ the first `pybadge.py` API scope:
   not necessarily battery-only voltage. The archived `vmain` script uses a
   rough 2.0 V ADC full-scale assumption; the Arduino board notes recommend a
   nominal 1.1 V value with per-chip calibration. Neither is a measured
-  calibration. Keep `read_battery_voltage()` unavailable or clearly mark it
+  calibration. Hardware mode currently reports a nominal estimate using the
+  ADC's `read_uv()` value and the divider's ×16 ratio. Keep it clearly marked
   uncalibrated until hardware measurements settle the ADC conversion.
 - **SD card:** hardware wiring is now identified above. A future API could
   expose simple file operations or mount/unmount helpers, but only after the
@@ -158,10 +172,10 @@ the first `pybadge.py` API scope:
   external driver. A future beginner API may include servo angle control, but
   should explain the separate power and ground requirements.
 - **Display drawing:** archived examples use the ST7789 driver's pixel, line,
-  rectangle, polygon, bitmap, and text operations. The first public API can
-  remain simple, but a small set of drawing helpers (pixel, line, filled
-  rectangle, and image) would enable games and visual projects without exposing
-  the driver object.
+  rectangle, polygon, bitmap, and text operations. The public API now includes
+  pixel, line, rectangle, and image helpers without exposing the driver object;
+  the terminal simulator reports drawing calls as a text log rather than
+  rasterizing them.
 - **Animation/audio:** archived examples include a BYU-I demo with a changing
   LED pattern, plus a buzzer song. These support the reviewed loop-and-pause
   approach for animation; a later `play_song()` helper could be considered if

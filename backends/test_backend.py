@@ -66,6 +66,17 @@ class TestBackend:
         operation = ("text", text, x, y, color)
         self.display_operations.append(operation)
 
+    def draw_pixel(self, x, y, color):
+        self.display_operations.append(("pixel", x, y, color))
+
+    def draw_line(self, x1, y1, x2, y2, color):
+        self.display_operations.append(("line", x1, y1, x2, y2, color))
+
+    def draw_rectangle(self, x, y, width, height, color, filled):
+        self.display_operations.append(
+            ("rectangle", x, y, width, height, color, filled)
+        )
+
     def display_image(self, path, x, y):
         self.display_operations.append(("image", path, x, y))
 

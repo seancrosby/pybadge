@@ -1,6 +1,6 @@
 # Draft `pybadge.py` public API for review
 
-**Status: user-reviewed; implementation pending.** Agreed decisions are
+**Status: user-reviewed; implementation in progress.** Agreed decisions are
 recorded below. Advanced Wi-Fi result fields and exact test-helper names still
 need implementation-level choices.
 
@@ -37,6 +37,8 @@ separate simulated screen area.
 | `play_tone(frequency_hz, duration_ms)` / `stop_tone()` | Play a buzzer tone for the requested duration, or stop it early. |
 | `display_clear(color=BLACK)` | Fill the LCD with a color. |
 | `display_text(text, x=8, y=8, color=WHITE)` | Draw text at pixel coordinates. |
+| `draw_pixel(x, y, color=WHITE)` / `draw_line(x1, y1, x2, y2, color=WHITE)` | Draw a pixel or line on the display. |
+| `draw_rectangle(x, y, width, height, color=WHITE, filled=False)` | Draw an outline or filled rectangle. |
 | `display_image(path, x=0, y=0)` | Display an image resource in the format supported by the active backend. For hardware, use a prepared display asset generated from a PNG/JPG source. |
 | `scan_wifi(include_details=False)` | **Agreed:** by default, return nearby networks as `(ssid, signal_dbm)` pairs. When `include_details=True`, return richer network records. Candidate extra fields are channel and security/authentication; exact record shape remains open. |
 | `pause(milliseconds)` | Pause for the requested number of milliseconds. |
@@ -50,7 +52,10 @@ connections. The V4.1.1 production netlist confirms these signals are routed
 to J9 contacts 1, 3, 5, 7, 9, and 11. The board silk labels them `IO13` through
 `IO18`; software should name them by ESP32 GPIO number. All built-in peripheral
 helpers assume the board's standard jumper-bridge positions. The API must not
-assume it can detect when a user changes those physical bridges.
+assume it can detect when a user changes those physical bridges. The first
+version supports only the standard routing for built-in helpers. For a changed
+route, users can address the actual GPIO through the external pin helpers;
+remapping built-in helpers is not part of the current API.
 
 Proposed constants and functions:
 
@@ -94,10 +99,12 @@ does not report intermediate voltage levels. **Agreed:** `read_voltage()`
 returns volts and rejects pins that are not verified as ADC-capable with a
 clear error. `read_pin()`, `is_high()`, and `is_low()` are digital reads and
 remain available on verified digital-input GPIOs whether or not they support
-ADC. Document the safe voltage range for each analog input. GPIO uses 3.3 V
-logic; the software cannot protect a pin from an over-voltage connection. PWM
-should be limited to verified output pins and use an approachable duty
-percentage from 0 to 100. The final supported pin list needs V4.1.1 validation.
+ADC. GPIO13–GPIO18 are ADC2 inputs on the ESP32-S3 and are routed to the V4.1.1
+expansion header. Document the ADC's measurement range and its Wi-Fi restriction.
+GPIO uses 3.3 V logic; the software cannot protect a pin from an over-voltage
+connection. PWM should be limited to verified output pins and use an
+approachable duty percentage from 0 to 100. Physical readings still need
+validation on the badge.
 
 **Deferred future work:** Bluetooth Low Energy (BLE) and SD-card support are
 not part of the first API. Add them in a later iteration after firmware
@@ -153,6 +160,8 @@ helper names are open for review.
 9. **Clarified:** use GPIO13 through GPIO18, which correspond to board labels
    IO13 through IO18 on the default header wiring. The public API should expose
    named constants such as `GPIO13` to make the GPIO-number meaning explicit.
+   Espressif identifies these as ADC2 channels 2 through 7 on the ESP32-S3;
+   ADC reads need validation against the board's target firmware.
 10. **Agreed:** `read_voltage(pin)` returns volts and rejects pins that are
     not verified ADC inputs. Digital `read_pin()`/`is_high()`/`is_low()` remain
     available on verified digital inputs without ADC.

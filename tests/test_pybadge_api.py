@@ -97,7 +97,7 @@ def test_wifi_results_are_simple_by_default_and_detailed_on_request(badge_backen
     badge_backend.set_wifi_results(
         [
             {
-                "ssid": "classroom",
+                "ssid": "ExampleNet",
                 "signal_dbm": -42,
                 "channel": 6,
                 "security": "WPA2",
@@ -105,15 +105,28 @@ def test_wifi_results_are_simple_by_default_and_detailed_on_request(badge_backen
         ]
     )
 
-    assert pybadge.scan_wifi() == [("classroom", -42)]
+    assert pybadge.scan_wifi() == [("ExampleNet", -42)]
     assert pybadge.scan_wifi(include_details=True) == [
         {
-            "ssid": "classroom",
+            "ssid": "ExampleNet",
             "signal_dbm": -42,
             "channel": 6,
             "security": "WPA2",
         }
     ]
+
+
+def test_accelerometer_returns_g_values_and_can_be_unavailable(badge_backend):
+    badge_backend.set_accelerometer(0.15, -0.25, 0.97)
+    assert pybadge.read_accelerometer() == (0.15, -0.25, 0.97)
+
+    badge_backend.accelerometer_values = None
+    assert pybadge.read_accelerometer() is None
+
+
+def test_battery_voltage_returns_volts_not_a_percentage(badge_backend):
+    badge_backend.set_battery_voltage(3.87)
+    assert pybadge.read_battery_voltage() == 3.87
 
 
 def test_shutdown_releases_test_outputs(badge_backend):

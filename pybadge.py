@@ -250,6 +250,30 @@ def display_text(text, x=8, y=8, color=WHITE):
     _require_backend().display_text(str(text), int(x), int(y), _validate_color(color))
 
 
+def draw_pixel(x, y, color=WHITE):
+    """Draw one pixel at display coordinates ``(x, y)``."""
+    _require_backend().draw_pixel(int(x), int(y), _validate_color(color))
+
+
+def draw_line(x1, y1, x2, y2, color=WHITE):
+    """Draw a line between two display coordinates."""
+    _require_backend().draw_line(
+        int(x1), int(y1), int(x2), int(y2), _validate_color(color)
+    )
+
+
+def draw_rectangle(x, y, width, height, color=WHITE, filled=False):
+    """Draw a rectangle, optionally filling its interior."""
+    if not isinstance(filled, bool):
+        raise TypeError("filled must be True or False")
+    x, y, width, height = int(x), int(y), int(width), int(height)
+    if width <= 0 or height <= 0:
+        raise ValueError("width and height must be greater than zero")
+    _require_backend().draw_rectangle(
+        x, y, width, height, _validate_color(color), filled
+    )
+
+
 def display_image(path, x=0, y=0):
     """Display a prepared image resource at the given display coordinates."""
     if not isinstance(path, str):
@@ -277,7 +301,11 @@ def read_accelerometer():
 
 
 def read_battery_voltage():
-    """Return battery voltage in volts (not a charge percentage)."""
+    """Return selected power-rail voltage in volts, not a charge percentage.
+
+    Hardware mode requires the VMain-to-IO12 jumper and returns a nominal
+    divider estimate. Physical calibration is still pending.
+    """
     return _require_backend().read_battery_voltage()
 
 
@@ -325,8 +353,9 @@ def is_low(pin):
 def read_voltage(pin):
     """Return an analog input voltage in volts.
 
-    The backend rejects pins without verified ADC support. Never apply voltage
-    above the board's documented safe input range.
+    Hardware mode supports GPIO13 through GPIO18 with the target firmware's
+    calibrated ADC read. These are ADC2 pins, so Wi-Fi must be inactive. Keep
+    the input within the documented measurement and 3.3 V logic limits.
     """
     return float(_require_backend().read_voltage(_validate_pin(pin)))
 

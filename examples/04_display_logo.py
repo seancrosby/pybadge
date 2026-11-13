@@ -1,8 +1,7 @@
 """Display the BYU-Idaho CSE logo prepared from the repository PNG.
 
-Run `python resize_image.py byui-cse.png` from the repository root first. Then
-run this example after `pybadge.py` is implemented and the BMP is copied to the
-badge when using hardware mode.
+Run `python resize_image.py byui-cse.png` from the repository root first. Copy
+the generated BMP to the badge when using hardware mode.
 """
 
 import pybadge

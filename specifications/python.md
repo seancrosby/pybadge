@@ -6,7 +6,7 @@ These standards apply to new project Python code, especially the user-facing `py
 
 The software targets MicroPython on the ESP32-S3 eBadge. Keep the public interface approachable for learners who know Python functions but do not know electronics APIs.
 
-`pybadge.py` has three runtime modes with one shared API: hardware mode on the physical badge, interactive simulator mode on a computer, and deterministic headless test mode for `pytest`. The simulator presents a terminal board view with clickable inputs; the test backend must not launch a UI or wait for input.
+`pybadge.py` has three runtime modes with one shared API: hardware mode on the physical badge, interactive simulator mode on a computer, and deterministic headless test mode for `pytest`. The simulator presents a terminal board view with clickable buttons and joystick positions; it models display, LED, and buzzer output. The test backend must not launch a UI or wait for input.
 
 ## Design principles
 

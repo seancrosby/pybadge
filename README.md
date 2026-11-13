@@ -5,16 +5,15 @@ eBadge. The goal is for any user to write ordinary Python programs that use
 buttons, LEDs, the screen, sound, sensors, and Wi-Fi without dealing with GPIO
 numbers or low-level electronics APIs.
 
-The intended `pybadge.py` interface will support three modes: the physical
-eBadge, an interactive terminal simulator, and a headless test backend. The
-public API has been reviewed; implementation details and remaining tasks are
-tracked in [TODO.md](TODO.md) and the [specifications](specifications/). The
-programs in [`examples/`](examples/) show the intended user experience and
-will become runnable when the API is implemented. The simulator's blue board
-artwork will carry the BYU-Idaho logo permanently, separate from the simulated
-screen, whose contents are controlled by the running program.
+The `pybadge.py` interface supports three modes: the physical eBadge, an
+interactive terminal simulator, and a headless test backend. The public API
+has been reviewed; remaining work is tracked in [TODO.md](TODO.md) and the
+[specifications](specifications/). Programs in [`examples/`](examples/) show
+the intended user experience. The simulator keeps the BYU-Idaho logo as
+permanent blue-board artwork, separate from the simulated screen controlled
+by the running program.
 
-## Classroom workflow
+## Using and sharing this project
 
 Use this repository as the maintained source for the library, examples, and
 setup instructions. Keep personal programs under `examples/` or a clearly
@@ -32,14 +31,17 @@ copying MicroPython-compatible files to the device. See the
 [user workflow recommendation](specifications/user-workflow.md) for the
 distribution tradeoffs.
 
-The first API includes accelerometer and battery-voltage helpers. Battery
-readings are voltages, not estimated charge percentages. BLE and SD-card
-support are deferred future work.
+The API includes accelerometer and battery-voltage helpers. Battery readings
+are voltages, not estimated charge percentages; the physical battery reading
+uses a nominal divider ratio and still needs calibration. Normalized joystick
+directions are available in the simulator and test backend, while hardware
+support remains disabled until its direction and center behavior are
+calibrated. BLE and SD-card support are deferred future work.
 
-The terminal simulator focuses on buttons, the screen, LEDs, and buzzer
-activity. It is not a full electrical or wireless simulation; the README and
-simulator should identify features such as voltage measurement and Wi-Fi
-scanning that are not modeled there.
+The terminal simulator models buttons, joystick positions, the screen, LEDs,
+and buzzer activity. It does not model Wi-Fi scanning, accelerometer or
+battery readings, external GPIO, voltage measurement, or PWM output. It is not
+a full electrical simulation.
 
 ## Board photographs
 
@@ -54,14 +56,16 @@ and components; the back includes a printed quick reference for GPIOs and buses.
 
 | Path | Purpose |
 | --- | --- |
-| `pybadge.py` | Planned user-facing API shared by all runtime modes. |
-| `backends/` | Planned hardware, simulator, and test implementations. |
-| `board/` | Planned e-badge Git submodule and hardware design source. |
+| `pybadge.py` | User-facing API shared by all runtime modes. |
+| `backends/` | Hardware, simulator, and headless test implementations. |
+| `board/` | eBadge Git submodule and hardware design source (initialize with the submodule command below). |
 | `specifications/` | Python standards and the current V4.1.1 board specification. |
-| `examples/` | Small programs demonstrating the planned API. |
+| `examples/` | Small programs demonstrating the public API. |
 | `old/python/` | Archived course samples and hardware libraries. These are reference examples and do not follow this project's Python standards. |
 | `hardware/ebadge/` | eBadge setup guide and reference material. |
+| `resize_image.py` | Host utility that prepares 24-bit BMP files for the badge display. |
 | `byui-cse.png` | Logo asset used by the display example. |
+| `byui-cse_badge.bmp` | Prepared 320 × 115 logo image used by the display example. |
 
 The current board target is V4.1.1. The hardware specification compares the
 V4 course software with the V4.1.1 design files, production netlist, and board
@@ -80,8 +84,12 @@ headers to GPIO signals. The board specification and built-in peripheral
 helpers describe the standard, as-built bridge positions. Removing or moving a
 bridge changes the electrical routing: a built-in device may no longer be
 connected to the GPIO its helper expects, and a GPIO may become available for
-an external circuit. The software cannot detect a manually changed bridge, so
-record any nonstandard wiring and configure the software for that wiring.
+an external circuit. The software cannot detect a manually changed bridge.
+Built-in peripheral helpers support the standard routing only. If a bridge is
+changed, record the new route and use `configure_pin()` / `read_pin()` /
+`write_pin()` / `set_pwm()` with the GPIO signal actually connected; restore
+the standard bridge positions before using the built-in peripheral helper
+again. The current API does not let users remap a built-in peripheral helper.
 
 The V4.1.1 upstream production netlist confirms GPIO13–GPIO18 are routed to
 J9's odd-numbered contacts (1, 3, 5, 7, 9, and 11). The upstream BOM's U1
@@ -89,7 +97,7 @@ description says `ESP32-S2-MINI-1`, while its manufacturer part number and the
 design files identify an ESP32-S3-MINI-1-N4R2. Use the GPIO signal names in
 software; do not infer module pad numbers from that inconsistent description.
 
-The planned `set_pwm(pin, frequency_hz, duty_percent)` helper uses a duty
+The `set_pwm(pin, frequency_hz, duty_percent)` helper uses a duty
 percentage from 0 to 100. A duty of `0` keeps the output off; `100` keeps it
 on. For example, this requests a 1,000 Hz signal that is on half of each cycle:
 
@@ -110,6 +118,11 @@ pybadge.pause(80)  # wait 80 milliseconds before the next frame
 
 Frame updates and timing are separate; animations do not require a predefined
 animation or a timing list.
+
+The display API also includes `draw_pixel()`, `draw_line()`, and
+`draw_rectangle()`. A rectangle can be outlined or filled with `filled=True`.
+The simulator records these drawing operations and their coordinates in its
+screen area; it does not rasterize them into a graphical image.
 
 The upstream eBadge source is tracked as a Git submodule. Initialize it after a
 fresh checkout with:
@@ -178,57 +191,145 @@ GitHub Actions runs this suite automatically on every push and pull request.
 The tests are collected only from `tests/`; archived examples under `old/` are
 reference material, not pytest test modules.
 
+The headless suite also checks deterministic accelerometer and voltage values.
+It cannot validate the physical sensors or ADC calibration.
+
+## Run the terminal simulator
+
+Install Textual. Pillow is optional and enables the permanent logo artwork;
+the simulator shows a text fallback when Pillow or image rendering is
+unavailable:
+
+```sh
+python -m pip install textual pillow
+```
+
+From the repository root, run a program that calls `pybadge.initialize()`.
+For example, on macOS or Linux:
+
+```sh
+PYTHONPATH=. python examples/01_button_led.py
+```
+
+In PowerShell, use `$env:PYTHONPATH = "."` before running the same Python
+script. The clickable D-pad and A/B buttons model physical buttons; the
+separate joystick pad sets normalized joystick positions until centered again.
+The screen, RGB indicator, 24 strip LEDs, and buzzer state are shown in the
+terminal board. Press `q` to close the board and **Ctrl-C** to stop a running
+example program.
+
 ## Run the examples
 
-The four programs in [`examples/`](examples/) demonstrate the intended API:
+The programs in [`examples/`](examples/) demonstrate the intended API:
 
 1. Light the RGB LED while button A is held.
 2. Scan for and list nearby Wi-Fi networks.
 3. Play a tone when button A is pressed.
 4. Display the BYU-Idaho CSE logo from `byui-cse.png`.
+5. Draw pixels, lines, and outlined and filled rectangles.
 
-These programs depend on `pybadge.py`, which is not implemented yet. Their
-required functions and the backend design are being tracked in [TODO.md](TODO.md).
+These programs use `pybadge.py`. Some physical hardware behavior still needs
+validation; see [TODO.md](TODO.md) for remaining work and hardware limitations.
 Before running the logo example, prepare the PNG for the display with the
-planned host utility:
+host utility. Install Pillow if it is not already available:
 
 ```sh
+python -m pip install pillow
 python resize_image.py byui-cse.png
 ```
 
-The utility is not implemented yet. Its planned output is a 24-bit BMP sized
-for the 320 × 240 screen.
+This creates `byui-cse_badge.bmp`, an uncompressed 24-bit BMP resized to fit
+the 320 × 240 display while preserving the source aspect ratio. Small source
+images are not enlarged.
 
 ### Copy project files to the badge
 
-The intended badge destinations are `/pybadge.py` for the shared API,
-`/main.py` for the program that should start on reset, and
-`/byui-cse_badge.bmp` for the prepared image used by the logo example. From the
-repository root, these `mpremote` commands copy those files (replace `<PORT>`
-with the badge's serial port):
+Hardware mode uses the backend package plus the existing `ebadge.py` library,
+board driver, display driver, and font. From the repository root, create the
+backend directory and copy the required modules. Replace `<PORT>` with the
+badge's serial port:
 
 ```sh
 python -m mpremote connect <PORT> fs cp pybadge.py :pybadge.py
+# Run this once on a fresh device; skip if :backends already exists.
+python -m mpremote connect <PORT> fs mkdir :backends
+python -m mpremote connect <PORT> fs cp backends/__init__.py :backends/__init__.py
+python -m mpremote connect <PORT> fs cp backends/hardware_backend.py :backends/hardware_backend.py
+python -m mpremote connect <PORT> fs cp old/python/ebadge.py :ebadge.py
+python -m mpremote connect <PORT> fs cp old/python/board_v4.py :board_v4.py
+python -m mpremote connect <PORT> fs cp old/python/st7789py.py :st7789py.py
+python -m mpremote connect <PORT> fs cp old/python/vga1_8x16.py :vga1_8x16.py
 python -m mpremote connect <PORT> fs cp examples/01_button_led.py :main.py
-python -m mpremote connect <PORT> fs cp byui-cse_badge.bmp :byui-cse_badge.bmp
 ```
 
-Copy the image only for programs that use it. To install the logo example
-instead of the button example, use its filename in the second command:
+To install the logo example, copy it to `/main.py` and copy its prepared image
+to `/byui-cse_badge.bmp`:
 
 ```sh
 python -m mpremote connect <PORT> fs cp examples/04_display_logo.py :main.py
+python -m mpremote connect <PORT> fs cp byui-cse_badge.bmp :byui-cse_badge.bmp
 ```
 
-The hardware backend and its support-file requirements are not implemented
-yet, so these commands describe the intended destinations and are not a
-complete runnable deployment procedure. Finalize the file list and any
-additional copy commands with the hardware backend; see [TODO.md](TODO.md).
+The display-shapes example needs no extra asset:
+
+```sh
+python -m mpremote connect <PORT> fs cp examples/05_display_shapes.py :main.py
+```
+
+The backend delegates board operations to the archived `ebadge.py` library.
+The joystick direction mapping remains unavailable pending physical
+validation. Battery-voltage readings use the nominal ×16 divider ratio and
+still need calibration on the physical board. Confirm the VMain-to-IO12 jumper
+is installed; the software cannot detect that bridge. GPIO13–GPIO18 voltage
+readings use MicroPython's per-chip calibrated ADC conversion and require
+Wi-Fi to be inactive. Verify readings on the physical badge before relying on
+them.
+
+## Run guided checks on the physical badge
+
+After copying the hardware backend files above, copy the runner to the badge
+and open its interactive REPL. The checks prompt
+for keyboard input, so run them from the REPL instead of `mpremote run`.
+
+```sh
+python -m mpremote connect <PORT> fs cp hardware_tests/run_pybadge_checks.py :run_pybadge_checks.py
+python -m mpremote connect <PORT> repl
+```
+
+At the MicroPython `>>>` prompt, enter:
+
+```python
+import run_pybadge_checks
+run_pybadge_checks.main()
+```
+
+The runner asks you to press and release each button, confirm LED/display/tone
+output, inspect Wi-Fi results, and record each check as pass, fail, retry, or
+skip. Optional GPIO checks require a wire between GPIO13 and GPIO14; connect no
+power source for that loopback. The PWM check needs an oscilloscope or an LED
+with a current-limiting resistor. The ADC check needs a known source within the
+documented measurement range and a common ground. Skip any check when its safe
+test setup is unavailable. The battery reading is a nominal estimate; compare
+it with a meter and record the result while the VMain-to-IO12 jumper is fitted.
+
+To check the hardware-specific library independently of `pybadge.py`, copy
+and import the second runner:
+
+```sh
+python -m mpremote connect <PORT> fs cp hardware_tests/run_ebadge_checks.py :run_ebadge_checks.py
+python -m mpremote connect <PORT> repl
+```
+
+At the MicroPython prompt, enter `import run_ebadge_checks` followed by
+`run_ebadge_checks.main()`.
+
+Both scripts print a pass/fail/skip summary. They do not change jumper bridges
+or infer their positions.
 
 ### Joystick values
 
-The planned `pybadge.joystick()` function returns a tuple `(x, y)`, with each
-axis ranging from `-1.0` to `1.0`. For example:
+The `pybadge.joystick()` function returns a tuple `(x, y)` in the simulator
+and test backends, with each axis ranging from `-1.0` to `1.0`. For example:
 
 ```python
 x, y = pybadge.joystick()
@@ -237,8 +338,8 @@ x, y = pybadge.joystick()
 For `x`, `-1.0` means fully left and `1.0` fully right. For `y`, `-1.0`
 means fully down and `1.0` fully up. Values near zero mean the stick is near
 the center. These are normalized direction values, not raw voltage or ADC
-readings. A small center dead zone may report exactly `0.0` to make the stick
-easier to use.
+readings. The hardware backend raises `UnsupportedFeatureError` until
+physical center and direction calibration is complete.
 
 For examples from the earlier course materials, see [`old/python/`](old/python/)
 and the archived [eBadge setup guide](hardware/ebadge/README.md). Those samples
